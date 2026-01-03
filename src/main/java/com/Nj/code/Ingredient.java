@@ -5,45 +5,38 @@ import java.util.Objects;
 public class Ingredient {
     private int id;
     private String name;
-    private double price;
+    private Double price;
     private Category CategoryEnum;
     private Dish dish;
 
-    public int getId() {
-        return id;
+    public Ingredient(int id, String name, double price, Category category, Dish dish) {
     }
+
+    public int getId() {return id;}
 
     public void setId(int id) {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() {return name;}
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public double getPrice() {
-        return price;
-    }
+    public double getPrice() {return price;}
 
     public void setPrice(double price) {
         this.price = price;
     }
 
-    public Category getCategoryEnum() {
-        return CategoryEnum;
-    }
+    public Category getCategoryEnum() {return CategoryEnum;}
 
     public void setCategoryEnum(Category categoryEnum) {
         CategoryEnum = categoryEnum;
     }
 
-    public Dish getDish() {
-        return dish;
-    }
+    public Dish getDish() {return dish;}
 
     public void setDish(Dish dish) {
         this.dish = dish;
