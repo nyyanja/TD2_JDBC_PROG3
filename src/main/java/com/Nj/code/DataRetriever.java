@@ -1,58 +1,67 @@
 package com.Nj.code;
 
+import java.awt.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataRetriever {
-    private final DBConnection db;
-
-    public DataRetriever() {
-        this.db = new DBConnection();
+    private DBConnection db ;
+    public   DataRetriever(DBConnection  db){
+        this.db = db;
     }
 
-    public Dish findDishById(Integer id) {
+    public Dish findDishById  (Integer id){
+        Connection conn = null;
         Dish dish = null;
-        try (var connection = db.getDBConnection();
-             var ps = connection.prepareStatement(
-                     "SELECT d.id AS dish_id, d.name AS dish_name, d.type AS dish_type, " +
-                             "i.id AS ingredient_id, i.name AS ingredient_name " +
-                             "FROM dishes d " +
-                             "LEFT JOIN dish_ingredients di ON d.id = di.dish_id " +
-                             "LEFT JOIN ingredients i ON di.ingredient_id = i.id " +
-                             "WHERE d.id = ?")) {
+        List<Ingredient> ingredients = new ArrayList<>();
 
-            ps.setInt(1, id);
+        String dishSql = "SELECT * FROM Dish WHERE id = ?";
+        String ingredientSql = "SELECT * FROM Ingredient WHERE id = ?";
 
-            try (var rs = ps.executeQuery()) {
-                List<Ingredient> ingredients = new ArrayList<>();
+        try{
+            conn = db.getDBConnection();
 
-                while (rs.next()) {
-                    if (dish == null) {
-                        dish = new Dish();
-                        dish.setId(rs.getInt("dish_id"));
-                        dish.setName(rs.getString("dish_name"));
-                        dish.setDishTypeEnum(DishType.valueOf(rs.getString("dish_type")));
-                    }
+            //dish
+            PreparedStatement psDish = conn.prepareStatement(dishSql);
+            psDish.setInt(1,id);
+            ResultSet rsDish = psDish.executeQuery();
 
-                    Integer ingredientId = rs.getObject("ingredient_id", Integer.class);
-                    if (ingredientId != null) {
-                        Ingredient ingredient = new Ingredient();
-                        ingredient.setId(ingredientId);
-                        ingredient.setName(rs.getString("ingredient_name"));
-                        ingredients.add(ingredient);
-                    }
-                }
-
-                if (dish != null) {
-                    dish.setIngredients(ingredients);
-                }
+            if(rsDish.next()){
+                dish = new Dish(
+                        rsDish.getInt("id"),
+                        rsDish.getString("name"),
+                        DishType.valueOf(rsDish.getString("dish_type")),
+                        ingredients
+                );
             }
+            //ingredients
+            PreparedStatement psIng = conn.prepareStatement(ingredientSql);
+            psIng.setInt(1,id);
+            ResultSet rsIng = psIng.executeQuery();
 
-        } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de la récupération du plat", e);
+            while (rsIng.next()){
+                Ingredient  ingredient = new Ingredient(
+                        rsIng.getInt("id"),
+                        rsIng.getString("name"),
+                        rsIng.getDouble("price"),
+                        Category.valueOf(rsIng.getString("category")),
+                        dish
+                );
+                ingredients.add(ingredient);
+            }
+        }catch (SQLException e){
+            throw  new RuntimeException("Erreur lors de la recuperation du plat");
+        }finally {
+            try{
+                if (conn != null) conn.close();
+            }catch (SQLException e){
+                throw new RuntimeException("Erreur de la fermeture de la connexion");
+            }
         }
-
         return dish;
     }
 
