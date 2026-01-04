@@ -1,10 +1,7 @@
 package com.Nj.code;
 
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,5 +97,63 @@ public class DataRetriever {
             }
         }
         return ingredients;
+    }
+
+    public List<Ingredient> createIngredient (List<Ingredient> newIngredient){
+        Connection conn =  null;
+
+        String checkSql = "SELECT COUNT(*) FROM Ingredient WHERE name = ?";
+        String insertsql = "INSERT INTO Ingredient (name,prive, category, id_dish) VALUES (?,?,?,?)";
+
+        try {
+            //connexion et debut transaction
+            conn = db.getDBConnection();
+            conn.setAutoCommit(false);
+
+            // boucle pour verifier et inserer
+            for (Ingredient ing : newIngredient) {
+                try (PreparedStatement psCheck = conn.prepareStatement(checkSql)) {
+                    psCheck.setString(1, ing.getName());
+                    ResultSet rs = psCheck.executeQuery();
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        throw new RuntimeException("Ingredient déjà existant : " + ing.getName());
+                    }
+                }
+
+
+                //insertion
+                try(PreparedStatement psInsert = conn.prepareStatement(insertsql)){
+                    psInsert.setString(1,ing.getName());
+                    psInsert.setDouble(2,ing.getPrice());
+                    psInsert.setString(3,ing.getCategoryEnum().name());
+
+                    if (ing.getDish() != null){
+                        psInsert.setInt(4,ing.getDish().getId());
+                    }else {
+                        psInsert.setNull(4, Types.INTEGER);
+                    }
+                    psInsert.executeUpdate();
+                }
+            }
+            //commit si tout est ok
+            conn.commit();
+        }catch (Exception e){
+            //rollback si erreur
+            try{
+                if (conn!= null) conn.rollback();
+            }catch (SQLException ex){
+                throw new RuntimeException("Erreur rollback");
+            }
+            //propagation de l'erreur
+            throw  new RuntimeException( "Erreur lors de la creation des ingretiens : " + e.getMessage());
+        }finally {
+            //fermeture de la connection
+            try {
+                if (conn != null) conn.close();
+            }catch (SQLException e){
+                throw new RuntimeException("Erreur de la fermeture connexion");
+            }
+        }
+        return newIngredient;
     }
 }
