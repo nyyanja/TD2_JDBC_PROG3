@@ -65,5 +65,40 @@ public class DataRetriever {
         return dish;
     }
 
+    public  List<Ingredient> findIngredient (int  page,int size){
+        Connection conn =  null;
+        List<Ingredient> ingredients = new ArrayList<>();
+        int offset = (page -1) * size;
 
+        String sql = "SELECT * FROM Ingredient LIMIT ? OFFSET ?";
+
+        try{
+            conn = db.getDBConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1,size);
+            ps.setInt(2,offset);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()){
+                Ingredient ingredient = new Ingredient(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getDouble("price"),
+                        Category.valueOf(rs.getString("category")),
+                        null
+                );
+                ingredients.add(ingredient);
+            }
+        }catch (SQLException e){
+            throw new RuntimeException("Erreur lors de la pagination des ingredients");
+        }finally {
+            try {
+                if (conn != null) conn.close();
+            }catch (SQLException e){
+                throw new RuntimeException("Erreur de la fermeture connexion");
+            }
+        }
+        return ingredients;
+    }
 }
