@@ -124,8 +124,6 @@ public class Main {
             dataRetriever.saveDish(updateRemove);
             System.out.println("Plat mis à jour (suppression ingrédients)");
 
-            System.out.println("\n🎉 TOUS LES TESTS SONT PASSÉS 🎉");
-
         } finally {
 
         }
