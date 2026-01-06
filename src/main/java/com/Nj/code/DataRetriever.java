@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DataRetriever {
+
     private DBConnection db;
 
     public DataRetriever(DBConnection db) {
@@ -13,10 +14,10 @@ public class DataRetriever {
 
     public Dish findDishById(Integer id) {
         Connection conn = null;
-        Dish dish = null;
+        Dish dish;
         List<Ingredient> ingredients = new ArrayList<>();
 
-        String dishSql = "SELECT * FROM dish WHERE id = ?";
+        String dishSql = "SELECT id, name, dish_type FROM dish WHERE id = ?";
         String ingredientSql = "SELECT * FROM ingredient WHERE id_dish = ?";
 
         try {
@@ -26,16 +27,16 @@ public class DataRetriever {
             psDish.setInt(1, id);
             ResultSet rsDish = psDish.executeQuery();
 
-            if (rsDish.next()) {
-                dish = new Dish(
-                        rsDish.getInt("id"),
-                        rsDish.getString("name"),
-                        DishType.valueOf(rsDish.getString("dish_type")),
-                        ingredients
-                );
-            } else {
+            if (!rsDish.next()) {
                 throw new RuntimeException("Plat non trouvé pour id = " + id);
             }
+
+            dish = new Dish(
+                    rsDish.getInt("id"),
+                    rsDish.getString("name"),
+                    DishType.valueOf(rsDish.getString("dish_type")),
+                    ingredients
+            );
 
             PreparedStatement psIng = conn.prepareStatement(ingredientSql);
             psIng.setInt(1, id);
@@ -51,19 +52,20 @@ public class DataRetriever {
                 ));
             }
 
+            return dish;
+
         } catch (SQLException e) {
             throw new RuntimeException("Erreur findDishById: " + e.getMessage());
         } finally {
-            try { if (conn != null) conn.close(); } catch (SQLException e) {}
+            try { if (conn != null) conn.close(); } catch (SQLException ignored) {}
         }
-
-        return dish;
     }
 
     public List<Ingredient> findIngredient(int page, int size) {
         Connection conn = null;
         List<Ingredient> ingredients = new ArrayList<>();
         int offset = (page - 1) * size;
+
         String sql = "SELECT * FROM ingredient LIMIT ? OFFSET ?";
 
         try {
@@ -71,8 +73,8 @@ public class DataRetriever {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, size);
             ps.setInt(2, offset);
-            ResultSet rs = ps.executeQuery();
 
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 ingredients.add(new Ingredient(
                         rs.getInt("id"),
@@ -83,29 +85,26 @@ public class DataRetriever {
                 ));
             }
 
+            return ingredients;
+
         } catch (SQLException e) {
             throw new RuntimeException("Erreur findIngredient: " + e.getMessage());
         } finally {
-            try { if (conn != null) conn.close(); } catch (SQLException e) {}
+            try { if (conn != null) conn.close(); } catch (SQLException ignored) {}
         }
-
-        return ingredients;
     }
 
     public List<Ingredient> createIngredients(List<Ingredient> newIngredients) {
         Connection conn = null;
+
         String checkSql = "SELECT COUNT(*) FROM ingredient WHERE name = ?";
-        String insertSql = "INSERT INTO ingredient (name, price, category, id_dish) VALUES (?, ?, ?::ingredient_category_enum, ?)";
+        String insertSql = "INSERT INTO ingredient(name, price, category, id_dish) VALUES (?, ?, ?::ingredient_category_enum, ?)";
 
         try {
             conn = db.getDBConnection();
             conn.setAutoCommit(false);
 
             for (Ingredient ing : newIngredients) {
-                if (ing.getPrice() == 0.0) {
-                    throw new RuntimeException("Le prix de l'ingrédient ne peut pas être 0 : " + ing.getName());
-                }
-
                 try (PreparedStatement psCheck = conn.prepareStatement(checkSql)) {
                     psCheck.setString(1, ing.getName());
                     ResultSet rs = psCheck.executeQuery();
@@ -118,31 +117,34 @@ public class DataRetriever {
                     psInsert.setString(1, ing.getName());
                     psInsert.setDouble(2, ing.getPrice());
                     psInsert.setString(3, ing.getCategoryEnum().name());
+
                     if (ing.getDish() != null) {
                         psInsert.setInt(4, ing.getDish().getId());
                     } else {
                         psInsert.setNull(4, Types.INTEGER);
                     }
+
                     psInsert.executeUpdate();
                 }
             }
 
             conn.commit();
+            return newIngredients;
 
         } catch (Exception e) {
-            try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
+            try { if (conn != null) conn.rollback(); } catch (SQLException ignored) {}
             throw new RuntimeException("Erreur createIngredients: " + e.getMessage());
         } finally {
-            try { if (conn != null) conn.close(); } catch (SQLException e) {}
+            try { if (conn != null) conn.close(); } catch (SQLException ignored) {}
         }
-
-        return newIngredients;
     }
 
     public Dish saveDish(Dish dishToSave) {
         Connection conn = null;
-        String insertDishSql = "INSERT INTO dish(name, dish_type) VALUES (?,?) RETURNING id";
-        String updateDishSql = "UPDATE dish SET name = ?, dish_type = ? WHERE id = ?";
+
+        String insertSql = "INSERT INTO dish(name, dish_type) VALUES (?, ?::dish_type_enum) RETURNING id";
+        String updateSql = "UPDATE dish SET name = ?, dish_type = ?::dish_type_enum WHERE id = ?";
+
         String clearIngredientSql = "UPDATE ingredient SET id_dish = NULL WHERE id_dish = ?";
         String attachIngredientSql = "UPDATE ingredient SET id_dish = ? WHERE name = ?";
 
@@ -151,13 +153,15 @@ public class DataRetriever {
             conn.setAutoCommit(false);
 
             if (dishToSave.getId() == 0) {
-                PreparedStatement ps = conn.prepareStatement(insertDishSql);
+                PreparedStatement ps = conn.prepareStatement(insertSql);
                 ps.setString(1, dishToSave.getName());
                 ps.setString(2, dishToSave.getDishTypeEnum().name());
+
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) dishToSave.setId(rs.getInt(1));
+
             } else {
-                PreparedStatement ps = conn.prepareStatement(updateDishSql);
+                PreparedStatement ps = conn.prepareStatement(updateSql);
                 ps.setString(1, dishToSave.getName());
                 ps.setString(2, dishToSave.getDishTypeEnum().name());
                 ps.setInt(3, dishToSave.getId());
@@ -179,24 +183,25 @@ public class DataRetriever {
             return dishToSave;
 
         } catch (Exception e) {
-            try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
+            try { if (conn != null) conn.rollback(); } catch (SQLException ignored) {}
             throw new RuntimeException("Erreur saveDish: " + e.getMessage());
         } finally {
-            try { if (conn != null) conn.close(); } catch (SQLException e) {}
+            try { if (conn != null) conn.close(); } catch (SQLException ignored) {}
         }
     }
 
     public List<Dish> findDishByIngredientName(String ingredientName) {
         Connection conn = null;
         List<Dish> dishes = new ArrayList<>();
+
         String sql = "SELECT DISTINCT d.id, d.name, d.dish_type FROM dish d JOIN ingredient i ON d.id = i.id_dish WHERE i.name ILIKE ?";
 
         try {
             conn = db.getDBConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, "%" + ingredientName + "%");
-            ResultSet rs = ps.executeQuery();
 
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 dishes.add(new Dish(
                         rs.getInt("id"),
@@ -205,13 +210,14 @@ public class DataRetriever {
                         new ArrayList<>()
                 ));
             }
+
+            return dishes;
+
         } catch (SQLException e) {
             throw new RuntimeException("Erreur findDishByIngredientName: " + e.getMessage());
         } finally {
-            try { if (conn != null) conn.close(); } catch (SQLException e) {}
+            try { if (conn != null) conn.close(); } catch (SQLException ignored) {}
         }
-
-        return dishes;
     }
 
     public List<Ingredient> findIngredientsByCriteria(String ingredientName, Category category, String dishName, int page, int size) {
@@ -248,12 +254,12 @@ public class DataRetriever {
                 ));
             }
 
+            return ingredients;
+
         } catch (SQLException e) {
             throw new RuntimeException("Erreur findIngredientsByCriteria: " + e.getMessage());
         } finally {
-            try { if (conn != null) conn.close(); } catch (SQLException e) {}
+            try { if (conn != null) conn.close(); } catch (SQLException ignored) {}
         }
-
-        return ingredients;
     }
 }
