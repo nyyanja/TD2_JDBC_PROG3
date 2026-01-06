@@ -9,45 +9,39 @@ public class Ingredient {
     private Category CategoryEnum;
     private Dish dish;
 
-    public Ingredient(int id, String name, double price, Category category, Dish dish) {
-    }
-
-    public int getId() {return id;}
-
-    public void setId(int id) {
+    public Ingredient(int id, String name, Double price, Category category, Dish dish) {
         this.id = id;
-    }
-
-    public String getName() {return name;}
-
-    public void setName(String name) {
         this.name = name;
-    }
-
-    public double getPrice() {return price;}
-
-    public void setPrice(double price) {
         this.price = price;
-    }
-
-    public Category getCategoryEnum() {return CategoryEnum;}
-
-    public void setCategoryEnum(Category categoryEnum) {
-        CategoryEnum = categoryEnum;
-    }
-
-    public Dish getDish() {return dish;}
-
-    public void setDish(Dish dish) {
+        this.CategoryEnum = category;
         this.dish = dish;
     }
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public Double getPrice() { return price; }
+    public void setPrice(Double price) { this.price = price; }
+
+    public Category getCategoryEnum() { return CategoryEnum; }
+    public void setCategoryEnum(Category categoryEnum) { CategoryEnum = categoryEnum; }
+
+    public Dish getDish() { return dish; }
+    public void setDish(Dish dish) { this.dish = dish; }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Ingredient)) return false;
         Ingredient that = (Ingredient) o;
-        return id == that.id && Double.compare(price, that.price) == 0 && Objects.equals(name, that.name) && CategoryEnum == that.CategoryEnum && Objects.equals(dish, that.dish);
+        return id == that.id &&
+                Objects.equals(price, that.price) &&
+                Objects.equals(name, that.name) &&
+                CategoryEnum == that.CategoryEnum &&
+                Objects.equals(dish, that.dish);
     }
 
     @Override
