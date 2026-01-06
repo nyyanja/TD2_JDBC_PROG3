@@ -99,7 +99,7 @@ public class DataRetriever {
         return ingredients;
     }
 
-    public List<Ingredient> createIngredient (List<Ingredient> newIngredient){
+    public List<Ingredient> createIngredients(List<Ingredient> newIngredient){
         Connection conn =  null;
 
         String checkSql = "SELECT COUNT(*) FROM Ingredient WHERE name = ?";
@@ -155,5 +155,66 @@ public class DataRetriever {
             }
         }
         return newIngredient;
+    }
+
+    public Dish saveDish( Dish dishToSave){
+        Connection conn = null;
+
+        String insertDishSql = "INSERT INTO Dish(name,dish_type) VALUES (?,?) RETURNING id";
+        String updateDishSql = "UPDATE Dish SET name = ? , dish_type = ? WHERE id = ? ";
+        String clearIngredientSql = "UPDATE Ingredient SET id_dish = NULL WHERE id_dish = ? ";
+        String attachIngredientSql = "UPDATE Ingredient SET id_dish =? WHERE name = ? ";
+
+        try {
+                conn = db.getDBConnection();
+                conn.setAutoCommit(false);
+
+                //INSERT
+                if (dishToSave.getId() == 0){
+                    PreparedStatement ps = conn.prepareStatement(insertDishSql);
+                    ps.setString( 1, dishToSave.getName());
+                    ps.setString(2,dishToSave.getDishTypeEnum().name());
+
+                    ResultSet rs = ps.executeQuery();
+                    if (rs.next()){
+                        dishToSave.setId(rs.getInt(1));
+                    }
+                }
+                //UPDATE
+                else {
+                    PreparedStatement ps = conn.prepareStatement(updateDishSql);
+                    ps.setString(1,dishToSave.getName());
+                    ps.setString(2,dishToSave.getDishTypeEnum().name());
+                    ps.setInt(3,dishToSave.getId());
+
+                    //suprimer anciennes associations
+                    PreparedStatement psClear = conn.prepareStatement(clearIngredientSql);
+                    psClear.setInt(1,dishToSave.getId());
+                    psClear.executeUpdate();
+                }
+                // associer les nouveaux ingredients
+                for (Ingredient ing : dishToSave.getIngredients()){
+                    PreparedStatement psAttach = conn.prepareStatement(attachIngredientSql);
+                    psAttach.setInt(1,dishToSave.getId());
+                    psAttach.setString(2,ing.getName());
+                    psAttach.executeUpdate();
+                }
+
+                conn.commit();
+                return dishToSave;
+        }catch (Exception e){
+                    try {
+                        if (conn!= null) conn.rollback();
+                    }catch (SQLException ex){
+                        throw new RuntimeException("Erreur rollback");
+                    }
+                throw  new RuntimeException("Erreur daveDish");
+            }finally {
+                try {
+                    if (conn!= null) conn.close();
+                }catch (SQLException e){
+                    throw new RuntimeException("Erreur lors de la fermeture connexion");
+                }
+        }
     }
 }
