@@ -22,14 +22,11 @@ public class DataRetriever {
 
         try {
             conn = db.getDBConnection();
-
             PreparedStatement psDish = conn.prepareStatement(dishSql);
             psDish.setInt(1, id);
             ResultSet rsDish = psDish.executeQuery();
 
-            if (!rsDish.next()) {
-                throw new RuntimeException("Plat non trouvé pour id = " + id);
-            }
+            if (!rsDish.next()) throw new RuntimeException("Plat non trouvé pour id = " + id);
 
             dish = new Dish(
                     rsDish.getInt("id"),
@@ -96,8 +93,7 @@ public class DataRetriever {
 
     public List<Ingredient> createIngredients(List<Ingredient> newIngredients) {
         Connection conn = null;
-
-        String checkSql = "SELECT COUNT(*) FROM ingredient WHERE name = ?";
+        String deleteSql = "DELETE FROM ingredient WHERE name = ?";
         String insertSql = "INSERT INTO ingredient(name, price, category, id_dish) VALUES (?, ?, ?::ingredient_category_enum, ?)";
 
         try {
@@ -105,12 +101,9 @@ public class DataRetriever {
             conn.setAutoCommit(false);
 
             for (Ingredient ing : newIngredients) {
-                try (PreparedStatement psCheck = conn.prepareStatement(checkSql)) {
-                    psCheck.setString(1, ing.getName());
-                    ResultSet rs = psCheck.executeQuery();
-                    if (rs.next() && rs.getInt(1) > 0) {
-                        throw new RuntimeException("Ingrédient déjà existant : " + ing.getName());
-                    }
+                try (PreparedStatement psDelete = conn.prepareStatement(deleteSql)) {
+                    psDelete.setString(1, ing.getName());
+                    psDelete.executeUpdate();
                 }
 
                 try (PreparedStatement psInsert = conn.prepareStatement(insertSql)) {
@@ -118,11 +111,8 @@ public class DataRetriever {
                     psInsert.setDouble(2, ing.getPrice());
                     psInsert.setString(3, ing.getCategoryEnum().name());
 
-                    if (ing.getDish() != null) {
-                        psInsert.setInt(4, ing.getDish().getId());
-                    } else {
-                        psInsert.setNull(4, Types.INTEGER);
-                    }
+                    if (ing.getDish() != null) psInsert.setInt(4, ing.getDish().getId());
+                    else psInsert.setNull(4, Types.INTEGER);
 
                     psInsert.executeUpdate();
                 }
@@ -141,10 +131,8 @@ public class DataRetriever {
 
     public Dish saveDish(Dish dishToSave) {
         Connection conn = null;
-
         String insertSql = "INSERT INTO dish(name, dish_type) VALUES (?, ?::dish_type_enum) RETURNING id";
         String updateSql = "UPDATE dish SET name = ?, dish_type = ?::dish_type_enum WHERE id = ?";
-
         String clearIngredientSql = "UPDATE ingredient SET id_dish = NULL WHERE id_dish = ?";
         String attachIngredientSql = "UPDATE ingredient SET id_dish = ? WHERE name = ?";
 
@@ -193,7 +181,6 @@ public class DataRetriever {
     public List<Dish> findDishByIngredientName(String ingredientName) {
         Connection conn = null;
         List<Dish> dishes = new ArrayList<>();
-
         String sql = "SELECT DISTINCT d.id, d.name, d.dish_type FROM dish d JOIN ingredient i ON d.id = i.id_dish WHERE i.name ILIKE ?";
 
         try {
