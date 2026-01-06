@@ -250,4 +250,61 @@ public class DataRetriever {
         }
         return dishes;
     }
+
+    public List<Ingredient> findIngredientsByCriteria( String ingredientName, Category category, String dishName, int page, int size){
+        Connection conn = null;
+        List<Ingredient> ingredients = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT i.* FROM Ingredient i " + "LEFT JOIN Dish d ON i.id_dish = d.dish WHERE 1=1"
+        );
+        if(ingredientName != null){
+            sql.append("AND i.name ILIKE = ? ");
+        }
+        if (category!= null){
+            sql.append("AND i.category = ? ");
+        }
+        if (dishName!= null){
+            sql.append("AND d.name ILIKE ? ");
+        }
+        sql.append("LIMIT ? OFFSET ?");
+        try {
+            conn = db.getDBConnection();
+            PreparedStatement ps = conn.prepareStatement(sql.toString());
+            int index = 1;
+
+            if (ingredientName != null){
+                ps.setString(index++, "%"+ ingredientName + "%");
+            }
+            if (category != null){
+                ps.setString(index++, category.name());
+            }
+            if (dishName != null){
+                ps.setString(index++, "%"+ dishName + "%");
+            }
+            ps.setInt(index++,size);
+            ps.setInt(index++,(page - 1 ) * size);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()){
+                ingredients.add(new Ingredient(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getDouble("price"),
+                        Category.valueOf(rs.getString("category")),
+                        null
+                ));
+            }
+        }catch (SQLException e){
+            throw new RuntimeException("Erreur findIngredientsByCriteria");
+        }finally {
+            try {
+                if (conn != null) conn.close();
+            }catch (SQLException e){
+                throw new RuntimeException("Erreur fermeture connexion");
+            }
+        }
+        return ingredients;
+    }
 }
