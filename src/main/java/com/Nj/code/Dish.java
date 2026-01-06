@@ -6,42 +6,42 @@ import java.util.Objects;
 public class Dish {
     private int id;
     private String name;
-    private  DishType DishTypeEnum;
+    private DishType DishTypeEnum;
     private List<Ingredient> ingredients;
 
     public Dish(int id, String name, DishType dishType, List<Ingredient> ingredients) {
-    }
-
-    public int getId() {return id;}
-
-    public void setId(int id) {
         this.id = id;
-    }
-
-    public String getName() {return name;}
-
-    public void setName(String name) {
         this.name = name;
-    }
-
-    public DishType getDishTypeEnum() {return DishTypeEnum;}
-
-    public void setDishTypeEnum(DishType dishTypeEnum) {
-        DishTypeEnum = dishTypeEnum;
-    }
-
-    public List<Ingredient> getIngredients() {return ingredients;}
-
-    public void setIngredients(List<Ingredient> ingredients) {
+        this.DishTypeEnum = dishType;
         this.ingredients = ingredients;
+    }
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public DishType getDishTypeEnum() { return DishTypeEnum; }
+    public void setDishTypeEnum(DishType dishTypeEnum) { this.DishTypeEnum = dishTypeEnum; }
+
+    public List<Ingredient> getIngredients() { return ingredients; }
+    public void setIngredients(List<Ingredient> ingredients) { this.ingredients = ingredients; }
+
+    public Double getDishPrice() {
+        return ingredients == null ? 0.0 :
+                ingredients.stream().mapToDouble(Ingredient::getPrice).sum();
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Dish)) return false;
         Dish dish = (Dish) o;
-        return id == dish.id && Objects.equals(name, dish.name) && DishTypeEnum == dish.DishTypeEnum && Objects.equals(ingredients, dish.ingredients);
+        return id == dish.id &&
+                Objects.equals(name, dish.name) &&
+                DishTypeEnum == dish.DishTypeEnum &&
+                Objects.equals(ingredients, dish.ingredients);
     }
 
     @Override
@@ -57,10 +57,5 @@ public class Dish {
                 ", DishTypeEnum=" + DishTypeEnum +
                 ", ingredients=" + ingredients +
                 '}';
-    }
-
-    Double getDishPrice() {
-        return ingredients == null ? 0.0 :
-        ingredients.stream().mapToDouble(Ingredient::getPrice).sum();
     }
 }
