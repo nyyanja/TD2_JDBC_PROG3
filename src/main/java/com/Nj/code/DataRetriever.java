@@ -217,4 +217,37 @@ public class DataRetriever {
                 }
         }
     }
+
+    public List<Dish> findDishByIngredientName (String ingredientName) {
+        Connection conn = null;
+        List<Dish> dishes = new ArrayList<>();
+
+        String sql = "SELECT DISTINCT d.id, d.name,d.dish_type " + "FROM Dish d " + "JOIN Ingredient i ON d.id = i.id_dish " + "WHERE i.name ILIKE ? ";
+        try {
+            conn = db.getDBConnection();
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1,"%" + ingredientName + "%");
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()){
+                Dish dish = new Dish(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        DishType.valueOf(rs.getString("dish_type")),
+                        new ArrayList<>()
+                );
+                dishes.add(dish);
+            }
+        }catch (SQLException e) {
+            throw new RuntimeException("Erreur findDishByIngredientName");
+        }finally {
+            try {
+                if (conn != null) conn.close();
+            }catch (SQLException e){
+                throw new RuntimeException("Erreur fermeture connexion");
+            }
+        }
+        return dishes;
+    }
 }
