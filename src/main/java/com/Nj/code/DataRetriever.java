@@ -18,7 +18,7 @@ public class DataRetriever {
         List<Ingredient> ingredients = new ArrayList<>();
 
         String dishSql = "SELECT id, name, dish_type FROM dish WHERE id = ?";
-        String ingredientSql = "SELECT * FROM ingredient WHERE id_dish = ?";
+        String ingredientSql = "SELECT id, name, price, category FROM ingredient WHERE id_dish = ?";
 
         try {
             conn = db.getDBConnection();
@@ -63,7 +63,7 @@ public class DataRetriever {
         List<Ingredient> ingredients = new ArrayList<>();
         int offset = (page - 1) * size;
 
-        String sql = "SELECT * FROM ingredient LIMIT ? OFFSET ?";
+        String sql = "SELECT id, name, price, category FROM ingredient LIMIT ? OFFSET ?";
 
         try {
             conn = db.getDBConnection();
@@ -110,10 +110,8 @@ public class DataRetriever {
                     psInsert.setString(1, ing.getName());
                     psInsert.setDouble(2, ing.getPrice());
                     psInsert.setString(3, ing.getCategoryEnum().name());
-
                     if (ing.getDish() != null) psInsert.setInt(4, ing.getDish().getId());
                     else psInsert.setNull(4, Types.INTEGER);
-
                     psInsert.executeUpdate();
                 }
             }
@@ -144,10 +142,8 @@ public class DataRetriever {
                 PreparedStatement ps = conn.prepareStatement(insertSql);
                 ps.setString(1, dishToSave.getName());
                 ps.setString(2, dishToSave.getDishTypeEnum().name());
-
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) dishToSave.setId(rs.getInt(1));
-
             } else {
                 PreparedStatement ps = conn.prepareStatement(updateSql);
                 ps.setString(1, dishToSave.getName());
@@ -187,8 +183,8 @@ public class DataRetriever {
             conn = db.getDBConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, "%" + ingredientName + "%");
-
             ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
                 dishes.add(new Dish(
                         rs.getInt("id"),
@@ -212,7 +208,7 @@ public class DataRetriever {
         List<Ingredient> ingredients = new ArrayList<>();
         int offset = (page - 1) * size;
 
-        StringBuilder sql = new StringBuilder("SELECT i.* FROM ingredient i LEFT JOIN dish d ON i.id_dish = d.id WHERE 1=1 ");
+        StringBuilder sql = new StringBuilder("SELECT i.id, i.name, i.price, i.category FROM ingredient i LEFT JOIN dish d ON i.id_dish = d.id WHERE 1=1 ");
         if (ingredientName != null) sql.append("AND i.name ILIKE ? ");
         if (category != null) sql.append("AND i.category = ?::ingredient_category_enum ");
         if (dishName != null) sql.append("AND d.name ILIKE ? ");
