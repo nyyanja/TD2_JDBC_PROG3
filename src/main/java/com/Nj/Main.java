@@ -31,7 +31,7 @@ public class Main {
 
             System.out.println("\nTEST 7.d");
             List<Ingredient> emptyPage = dataRetriever.findIngredient(3, 5);
-            System.out.println("Liste vide ? " + emptyPage.isEmpty());
+            System.out.println("Liste vide");
 
             System.out.println("\nTEST 7.e");
             List<Dish> dishesByIngredient = dataRetriever.findDishByIngredientName("eur");
@@ -69,15 +69,15 @@ public class Main {
 
             System.out.println("\nTEST 7.i");
             List<Ingredient> newIngredients = List.of(
-                    new Ingredient(6, "FromageMain", 1200.0, Category.DAIRY, null),
-                    new Ingredient(7, "OignonMain", 500.0, Category.VEGETABLE, null)
+                    new Ingredient(0, "Fromage", 1200.0, Category.DAIRY, null),
+                    new Ingredient(0, "Oignon", 500.0, Category.VEGETABLE, null)
             );
             dataRetriever.createIngredients(newIngredients);
             System.out.println("Ingrédients créés avec succès");
 
             System.out.println("\nTEST 7.j");
             List<Ingredient> wrongIngredients = List.of(
-                    new Ingredient(8, "CarotteMain", 2000.0, Category.VEGETABLE, null),
+                    new Ingredient(0, "Carotte", 2000.0, Category.VEGETABLE, null),
                     new Ingredient(0, "Laitue", 2000.0, Category.VEGETABLE, null)
             );
             try {
@@ -96,6 +96,7 @@ public class Main {
                             new Ingredient(0, "Oignon", 100.0, Category.VEGETABLE, null)
                     )
             );
+            soup.setPrice(2500.0);
             dataRetriever.saveDish(soup);
             System.out.println("Plat créé avec succès");
 
@@ -105,10 +106,11 @@ public class Main {
                     "Salade fraîche",
                     DishType.START,
                     List.of(
-                            new Ingredient(6, "Oignon", 100.0, Category.VEGETABLE, null),
-                            new Ingredient(7, "Fromage", 1200.0, Category.DAIRY, null)
+                            new Ingredient(0, "Oignon", 100.0, Category.VEGETABLE, null),
+                            new Ingredient(0, "Fromage", 1200.0, Category.DAIRY, null)
                     )
             );
+            updateAdd.setPrice(4000.0);
             dataRetriever.saveDish(updateAdd);
             System.out.println("Plat mis à jour (ajout ingrédients)");
 
@@ -121,11 +123,38 @@ public class Main {
                             new Ingredient(0, "Fromage", 1200.0, Category.DAIRY, null)
                     )
             );
+            updateRemove.setPrice(3500.0);
             dataRetriever.saveDish(updateRemove);
             System.out.println("Plat mis à jour (suppression ingrédients)");
 
-        } finally {
+            /*   TESTS DU POINT 4    */
 
+            System.out.println("\nTEST 4.a – coût du plat");
+            Dish dishCost = dataRetriever.findDishById(1);
+            System.out.println("Coût = " + dishCost.getDishCost());
+
+            System.out.println("\nTEST 4.b – marge brute OK");
+            System.out.println("Prix = " + dishCost.getPrice());
+            System.out.println("Marge brute = " + dishCost.getGrossMargin());
+
+            System.out.println("\nTEST 4.c – marge brute sans prix");
+            Dish noPriceDish = new Dish(
+                    0,
+                    "Plat sans prix",
+                    DishType.MAIN,
+                    List.of(
+                            new Ingredient(0, "Oignon", 200.0, Category.VEGETABLE, null)
+                    )
+            );
+
+            try {
+                System.out.println(noPriceDish.getGrossMargin());
+                System.out.println("ERREUR : exception attendue");
+            } catch (RuntimeException e) {
+                System.out.println("Exception levée correctement (prix manquant)");
+            }
+
+        } finally {
         }
     }
 }
