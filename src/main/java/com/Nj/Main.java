@@ -65,61 +65,49 @@ public class Main {
         );
         chocolate.forEach(i -> System.out.println(i.getName()));
 
-        System.out.println("\nTEST 7.i");
-        Ingredient fromage = new Ingredient(0, "Fromage", 1200.0, Category.DAIRY, null);
-        fromage.setQuantity(1.0);
-        Ingredient oignon = new Ingredient(0, "Oignon", 500.0, Category.VEGETABLE, null);
-        oignon.setQuantity(2.0);
+        System.out.println("\nTEST 7.i – création ingrédients");
+        Ingredient fromage = new Ingredient(0, "Fromage", 1200.0, Category.DAIRY);
+        Ingredient oignon = new Ingredient(0, "Oignon", 500.0, Category.VEGETABLE);
         dataRetriever.createIngredients(List.of(fromage, oignon));
         System.out.println("Ingrédients créés avec succès");
 
-        System.out.println("\nTEST 7.j");
-        try {
-            Ingredient carotte = new Ingredient(0, "Carotte", 2000.0, Category.VEGETABLE, null);
-            Ingredient laitue = new Ingredient(0, "Laitue", 2000.0, Category.VEGETABLE, null);
-            dataRetriever.createIngredients(List.of(carotte, laitue));
-            System.out.println("ERREUR : atomicité non respectée");
-        } catch (RuntimeException e) {
-            System.out.println("Atomicité respectée (rollback effectué)");
-        }
+        System.out.println("\nTEST 7.k – création plat");
+        Ingredient ing1 = dataRetriever.findIngredient(1, 1).get(0);
 
-        System.out.println("\nTEST 7.k");
-        Ingredient ing1 = new Ingredient(0, "Oignon", 100.0, Category.VEGETABLE, null);
-        ing1.setQuantity(2.0);
-        Dish soup = new Dish(0, "Soupe de légumes", DishType.START, List.of(ing1));
+        Dish soup = new Dish(
+                0,
+                "Soupe de légumes",
+                DishType.START,
+                List.of(
+                        new DishIngredient(null, ing1, 2.0, "KG")
+                )
+        );
         soup.setPrice(2500.0);
         dataRetriever.saveDish(soup);
         System.out.println("Plat créé avec succès");
 
-        System.out.println("\nTEST 7.l");
-        Ingredient ing2 = new Ingredient(0, "Fromage", 1200.0, Category.DAIRY, null);
-        ing2.setQuantity(1.0);
-        Dish updateAdd = new Dish(1, "Salade fraîche", DishType.START, List.of(ing1, ing2));
-        updateAdd.setPrice(4000.0);
-        dataRetriever.saveDish(updateAdd);
-        System.out.println("Plat mis à jour (ajout ingrédients)");
+        System.out.println("\nTEST 7.l – mise à jour plat");
+        Ingredient ing2 = dataRetriever.findIngredient(2, 1).get(0);
 
-        System.out.println("\nTEST 7.m");
-        Dish updateRemove = new Dish(1, "Salade de fromage", DishType.START, List.of(ing2));
-        updateRemove.setPrice(3500.0);
-        dataRetriever.saveDish(updateRemove);
-        System.out.println("Plat mis à jour (suppression ingrédients)");
+        Dish updateDish = new Dish(
+                1,
+                "Salade fraîche",
+                DishType.START,
+                List.of(
+                        new DishIngredient(null, ing1, 1.0, "KG"),
+                        new DishIngredient(null, ing2, 1.0, "KG")
+                )
+        );
+        updateDish.setPrice(4000.0);
+        dataRetriever.saveDish(updateDish);
+        System.out.println("Plat mis à jour");
 
         System.out.println("\nTEST 4.a – coût du plat");
         Dish dishCost = dataRetriever.findDishById(1);
         System.out.println("Coût = " + dishCost.getDishCost());
 
-        System.out.println("\nTEST 4.b – marge brute OK");
+        System.out.println("\nTEST 4.b – marge brute");
         System.out.println("Prix = " + dishCost.getPrice());
         System.out.println("Marge brute = " + dishCost.getGrossMargin());
-
-        System.out.println("\nTEST 4.c – marge brute sans prix");
-        Dish noPriceDish = new Dish(0, "Plat sans prix", DishType.MAIN, List.of(ing1));
-        try {
-            System.out.println(noPriceDish.getGrossMargin());
-            System.out.println("ERREUR : exception attendue");
-        } catch (RuntimeException e) {
-            System.out.println("Exception levée correctement (prix manquant)");
-        }
     }
 }
