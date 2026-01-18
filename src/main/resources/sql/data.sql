@@ -1,13 +1,29 @@
-INSERT INTO Dish(id, name, dish_type) VALUES
-(1, 'Salade fraîche', 'START'),
-(2, 'Poulet grillé', 'MAIN'),
-(3, 'Riz au légumes', 'MAIN'),
-(4, 'Gâteaux au chocolat', 'DESSERT'),
-(5, 'Salade de fruits', 'DESSERT');
+TRUNCATE TABLE dish_ingredient CASCADE;
+TRUNCATE TABLE ingredient CASCADE;
+TRUNCATE TABLE dish CASCADE;
 
-INSERT INTO Ingredient(id, name, price, category,id_dish) VALUES
-(1, 'Laitue', 800.00, 'VEGETABLE',1),
-(2, 'Tomate', 600.00, 'VEGETABLE',1),
-(3, 'Poulet', 4500.00, 'ANIMAL',2),
-(4, 'Chocolat', 3000.00, 'OTHER',4),
-(5, 'Beurre', 2500.00, 'DAIRY',4);
+ALTER SEQUENCE dish_id_seq RESTART WITH 1;
+ALTER SEQUENCE ingredient_id_seq RESTART WITH 1;
+
+INSERT INTO dish(id, name, dish_type, price) VALUES
+                                                 (1, 'Salade fraîche', 'START', 4000.00),
+                                                 (2, 'Poulet grillé', 'MAIN', 7500.00),
+                                                 (3, 'Riz au légumes', 'MAIN', 3500.00),
+                                                 (4, 'Gâteaux au chocolat', 'DESSERT', 5000.00),
+                                                 (5, 'Salade de fruits', 'DESSERT', 3000.00);
+
+INSERT INTO ingredient(id, name, price, category) VALUES
+                                                      (1, 'Laitue', 800.00, 'VEGETABLE'),
+                                                      (2, 'Tomate', 600.00, 'VEGETABLE'),
+                                                      (3, 'Poulet', 4500.00, 'ANIMAL'),
+                                                      (4, 'Chocolat', 3000.00, 'OTHER'),
+                                                      (5, 'Beurre', 2500.00, 'DAIRY'),
+                                                      (6, 'Huile', 1500.00, 'OTHER');
+
+INSERT INTO dish_ingredient(dish_id, ingredient_id, quantity, unit) VALUES
+                                                                        (1, 1, 1, 'piece'),
+                                                                        (1, 2, 0.25, 'KG'),
+                                                                        (2, 3, 0.5, 'KG'),
+                                                                        (2, 6, 0.15, 'L'),
+                                                                        (4, 4, 0.3, 'KG'),
+                                                                        (4, 5, 0.2, 'KG');
