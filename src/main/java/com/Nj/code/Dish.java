@@ -1,23 +1,25 @@
 package com.Nj.code;
 
 import java.util.List;
-import java.util.Objects;
 
 public class Dish {
 
     private Integer id;
     private String name;
     private DishType dishType;
-    private List<Ingredient> ingredients;
     private Double price;
+    private List<DishIngredient> ingredients;
 
-    public Dish() {}
 
-    public Dish(Integer id, String name, DishType dishType, List<Ingredient> ingredients) {
+    public Dish(Integer id, String name, DishType dishType, List<DishIngredient> ingredients) {
         this.id = id;
         this.name = name;
         this.dishType = dishType;
-        this.setIngredients(ingredients);
+        this.ingredients = ingredients;
+    }
+
+    public Dish() {
+
     }
 
     public Integer getId() { return id; }
@@ -29,27 +31,19 @@ public class Dish {
     public DishType getDishType() { return dishType; }
     public void setDishType(DishType dishType) { this.dishType = dishType; }
 
-    public List<Ingredient> getIngredients() { return ingredients; }
-    public void setIngredients(List<Ingredient> ingredients) {
-        this.ingredients = ingredients;
-        if (ingredients != null) {
-            for (Ingredient ing : ingredients) {
-                ing.setDish(this);
-            }
-        }
-    }
-
     public Double getPrice() { return price; }
     public void setPrice(Double price) { this.price = price; }
 
+    public List<DishIngredient> getIngredients() { return ingredients; }
+    public void setIngredients(List<DishIngredient> ingredients) { this.ingredients = ingredients; }
+
+    // ===== TD3 =====
     public Double getDishCost() {
-        if (ingredients == null || ingredients.isEmpty()) return 0.0;
         double total = 0.0;
-        for (Ingredient ing : ingredients) {
-            if (ing.getQuantity() == null) {
-                throw new RuntimeException("Quantité manquante pour l'ingrédient : " + ing.getName());
+        if (ingredients != null) {
+            for (DishIngredient di : ingredients) {
+                total += di.getIngredient().getPrice() * di.getQuantity();
             }
-            total += ing.getPrice() * ing.getQuantity();
         }
         return total;
     }
@@ -59,31 +53,5 @@ public class Dish {
             throw new RuntimeException("Prix de vente non défini");
         }
         return price - getDishCost();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Dish)) return false;
-        Dish dish = (Dish) o;
-        return Objects.equals(id, dish.id) &&
-                Objects.equals(name, dish.name) &&
-                dishType == dish.dishType;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, dishType);
-    }
-
-    @Override
-    public String toString() {
-        return "Dish{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", dishType=" + dishType +
-                ", price=" + price +
-                ", ingredients=" + ingredients +
-                '}';
     }
 }
