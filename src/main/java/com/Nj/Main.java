@@ -24,54 +24,34 @@ public class Main {
         }
 
         System.out.println("\nTEST 7.c");
-        List<Ingredient> page2 = dataRetriever.findIngredient(2, 2);
-        page2.forEach(i -> System.out.println(i.getName()));
+        dataRetriever.findIngredient(2, 2)
+                .forEach(i -> System.out.println(i.getName()));
 
         System.out.println("\nTEST 7.d");
-        List<Ingredient> emptyPage = dataRetriever.findIngredient(3, 5);
-        System.out.println("Liste vide = " + emptyPage.isEmpty());
+        System.out.println(
+                "Liste vide = " + dataRetriever.findIngredient(3, 5).isEmpty()
+        );
 
         System.out.println("\nTEST 7.e");
-        List<Dish> dishesByIngredient = dataRetriever.findDishByIngredientName("eur");
-        dishesByIngredient.forEach(d -> System.out.println(d.getName()));
+        dataRetriever.findDishByIngredientName("eur")
+                .forEach(d -> System.out.println(d.getName()));
 
         System.out.println("\nTEST 7.f");
-        List<Ingredient> vegs = dataRetriever.findIngredientsByCriteria(
-                null,
-                Category.VEGETABLE,
-                null,
-                1,
-                10
-        );
-        vegs.forEach(i -> System.out.println(i.getName()));
+        dataRetriever.findIngredientsByCriteria(
+                null, Category.VEGETABLE, null, 1, 10
+        ).forEach(i -> System.out.println(i.getName()));
 
-        System.out.println("\nTEST 7.g");
-        List<Ingredient> emptyCriteria = dataRetriever.findIngredientsByCriteria(
-                "cho",
-                null,
-                "Sal",
-                1,
-                10
+        System.out.println("\nTEST 7.i – création ingrédients (avec stock)");
+        Ingredient fromage = new Ingredient(
+                0, "Fromage", 1200.0, Category.DAIRY, 20.0, "KG"
         );
-        System.out.println("Liste vide ? " + emptyCriteria.isEmpty());
-
-        System.out.println("\nTEST 7.h");
-        List<Ingredient> chocolate = dataRetriever.findIngredientsByCriteria(
-                "cho",
-                null,
-                "gâteau",
-                1,
-                10
+        Ingredient oignon = new Ingredient(
+                0, "Oignon", 500.0, Category.VEGETABLE, 30.0, "KG"
         );
-        chocolate.forEach(i -> System.out.println(i.getName()));
-
-        System.out.println("\nTEST 7.i – création ingrédients");
-        Ingredient fromage = new Ingredient(0, "Fromage", 1200.0, Category.DAIRY);
-        Ingredient oignon = new Ingredient(0, "Oignon", 500.0, Category.VEGETABLE);
         dataRetriever.createIngredients(List.of(fromage, oignon));
-        System.out.println("Ingrédients créés avec succès");
+        System.out.println("Ingrédients créés");
 
-        System.out.println("\nTEST 7.k – création plat");
+        System.out.println("\nTEST 7.k – création plat (consomme stock)");
         Ingredient ing1 = dataRetriever.findIngredient(1, 1).get(0);
 
         Dish soup = new Dish(
@@ -84,26 +64,10 @@ public class Main {
         );
         soup.setPrice(2500.0);
         dataRetriever.saveDish(soup);
-        System.out.println("Plat créé avec succès");
-
-        System.out.println("\nTEST 7.l – mise à jour plat");
-        Ingredient ing2 = dataRetriever.findIngredient(2, 1).get(0);
-
-        Dish updateDish = new Dish(
-                1,
-                "Salade fraîche",
-                DishType.START,
-                List.of(
-                        new DishIngredient(null, ing1, 1.0, "KG"),
-                        new DishIngredient(null, ing2, 1.0, "KG")
-                )
-        );
-        updateDish.setPrice(4000.0);
-        dataRetriever.saveDish(updateDish);
-        System.out.println("Plat mis à jour");
+        System.out.println("Plat créé");
 
         System.out.println("\nTEST 4.a – coût du plat");
-        Dish dishCost = dataRetriever.findDishById(1);
+        Dish dishCost = dataRetriever.findDishById(soup.getId());
         System.out.println("Coût = " + dishCost.getDishCost());
 
         System.out.println("\nTEST 4.b – marge brute");
