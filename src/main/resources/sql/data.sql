@@ -1,9 +1,4 @@
-TRUNCATE TABLE dish_ingredient CASCADE;
-TRUNCATE TABLE ingredient CASCADE;
-TRUNCATE TABLE dish CASCADE;
 
-ALTER SEQUENCE dish_id_seq RESTART WITH 1;
-ALTER SEQUENCE ingredient_id_seq RESTART WITH 1;
 
 INSERT INTO dish(id, name, dish_type, price) VALUES
                                                  (1, 'Salade fraîche', 'START', 4000.00),
