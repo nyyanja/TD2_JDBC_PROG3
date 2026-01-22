@@ -1,7 +1,6 @@
 package com.Nj.code;
 
 public class DishIngredient {
-
     private Dish dish;
     private Ingredient ingredient;
     private Double quantity;
