@@ -79,9 +79,16 @@ public class DataRetrieverTest {
     @Order(8)
     void testCreateIngredients() {
         Ingredient fromage = new Ingredient(0, "Fromage", 1200.0, Category.DAIRY);
+        fromage.setStockQuantity(10.0);
+        fromage.setStockUnit("pcs");
+
         Ingredient oignon = new Ingredient(0, "Oignon", 500.0, Category.VEGETABLE);
+        oignon.setStockQuantity(20.0);
+        oignon.setStockUnit("pcs");
+
         List<Ingredient> created = dataRetriever.createIngredients(List.of(fromage, oignon));
         assertEquals(2, created.size());
+        assertTrue(created.stream().allMatch(i -> i.getStockQuantity() != null));
     }
 
     @Test
