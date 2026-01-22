@@ -8,15 +8,24 @@ public class StockMovement {
     private Ingredient ingredient;
     private Double quantity;
     private String unit;
+    private StockMovementType movementType;
     private Instant movementDate;
 
     public StockMovement() {}
 
-    public StockMovement(Integer id, Ingredient ingredient, Double quantity, String unit, Instant movementDate) {
+    public StockMovement(
+            Integer id,
+            Ingredient ingredient,
+            Double quantity,
+            String unit,
+            StockMovementType movementType,
+            Instant movementDate
+    ) {
         this.id = id;
         this.ingredient = ingredient;
         this.quantity = quantity;
         this.unit = unit;
+        this.movementType = movementType;
         this.movementDate = movementDate;
     }
 
@@ -32,6 +41,13 @@ public class StockMovement {
     public String getUnit() { return unit; }
     public void setUnit(String unit) { this.unit = unit; }
 
+    public StockMovementType getMovementType() { return movementType; }
+    public void setMovementType(StockMovementType movementType) {
+        this.movementType = movementType;
+    }
+
     public Instant getMovementDate() { return movementDate; }
-    public void setMovementDate(Instant movementDate) { this.movementDate = movementDate; }
+    public void setMovementDate(Instant movementDate) {
+        this.movementDate = movementDate;
+    }
 }
