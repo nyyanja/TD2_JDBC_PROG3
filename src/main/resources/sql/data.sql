@@ -22,3 +22,14 @@ INSERT INTO dish_ingredient(dish_id, ingredient_id, quantity, unit) VALUES
                                                                         (2, 6, 0.15, 'L'),
                                                                         (4, 4, 0.3, 'KG'),
                                                                         (4, 5, 0.2, 'KG');
+INSERT INTO stock_movement
+(ingredient_id, quantity, unit, movement_type, movement_date)
+VALUES
+    (1, 10.0, 'KG', 'IN',  '2024-01-01 08:00'),
+    (2, 20.0, 'KG', 'IN',  '2024-01-01 08:00'),
+    (3, 15.0, 'KG', 'IN',  '2024-01-02 09:00'),
+    (4, 8.0,  'KG', 'IN',  '2024-01-02 10:00'),
+    (5, 6.0,  'KG', 'IN',  '2024-01-02 10:00'),
+    (1, 1.0,  'KG', 'OUT', '2024-01-05 12:00'),
+    (2, 0.25, 'KG', 'OUT', '2024-01-05 12:00'),
+    (3, 0.5,  'KG', 'OUT', '2024-01-06 10:00');
