@@ -117,19 +117,34 @@ public class DataRetriever {
         try (Connection conn = db.getDBConnection()) {
             conn.setAutoCommit(false);
 
-            PreparedStatement ps = conn.prepareStatement("""
+            for (Ingredient i : ingredients) {
+                PreparedStatement check = conn.prepareStatement(
+                        "SELECT id FROM ingredient WHERE name = ? AND category = ?::ingredient_category_enum"
+                );
+                check.setString(1, i.getName());
+                check.setString(2, i.getCategory().name());
+                ResultSet rs = check.executeQuery();
+
+                if (rs.next()) {
+                    i.setId(rs.getInt("id"));
+                    continue;
+                }
+
+                PreparedStatement ps = conn.prepareStatement("""
                 INSERT INTO ingredient
                 (name, price, category, stock_quantity, stock_unit)
                 VALUES (?, ?, ?::ingredient_category_enum, ?, ?)
+                RETURNING id
             """);
-
-            for (Ingredient i : ingredients) {
                 ps.setString(1, i.getName());
                 ps.setDouble(2, i.getPrice());
                 ps.setString(3, i.getCategory().name());
                 ps.setDouble(4, i.getStockQuantity());
                 ps.setString(5, i.getStockUnit());
-                ps.executeUpdate();
+                ResultSet rsInsert = ps.executeQuery();
+                if (rsInsert.next()) {
+                    i.setId(rsInsert.getInt(1));
+                }
             }
 
             conn.commit();
@@ -139,6 +154,7 @@ public class DataRetriever {
             throw new RuntimeException("Erreur createIngredients : " + e.getMessage());
         }
     }
+
 
     // =========================
     // SAVE DISH + STOCK UPDATE
