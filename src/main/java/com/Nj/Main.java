@@ -2,6 +2,7 @@ package com.Nj;
 
 import com.Nj.code.*;
 
+import java.time.Instant;
 import java.util.List;
 
 public class Main {
@@ -73,5 +74,14 @@ public class Main {
         System.out.println("\nTEST 4.b – marge brute");
         System.out.println("Prix = " + dishCost.getPrice());
         System.out.println("Marge brute = " + dishCost.getGrossMargin());
+
+        Instant t = Instant.parse("2024-01-06T12:00:00Z");
+        double fromageStock = fromage.getStockValueAt(t);
+        double oignonStock = oignon.getStockValueAt(t);
+
+        System.out.println("\nStock au " + t + " :");
+        System.out.println("Fromage = " + fromageStock + " " + fromage.getStockUnit());
+        System.out.println("Oignon = " + oignonStock + " " + oignon.getStockUnit());
     }
+
 }
