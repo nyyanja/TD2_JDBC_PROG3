@@ -82,6 +82,51 @@ public class Main {
         System.out.println("\nStock au " + t + " :");
         System.out.println("Fromage = " + fromageStock + " " + fromage.getStockUnit());
         System.out.println("Oignon = " + oignonStock + " " + oignon.getStockUnit());
+
+        // =====================================================
+        // ANNEXE 2 – TEST COMMANDES
+        // =====================================================
+
+        System.out.println("\n================ TEST ANNEXE 2 ================");
+        System.out.println("\nTEST 8.a – création commande");
+        Dish dishForOrder = dataRetriever.findDishById(soup.getId());
+        DishOrder dishOrder = new DishOrder(
+                null,
+                dishForOrder,
+                2
+        );
+
+        Order order = new Order();
+        order.setDishOrders(List.of(dishOrder));
+        Order savedOrder = dataRetriever.saveOrder(order);
+        System.out.println("Commande créée : " + savedOrder.getReference());
+        System.out.println("\nTEST 8.b – vérification stock après commande");
+        Dish dishAfterOrder = dataRetriever.findDishById(dishForOrder.getId());
+        dishAfterOrder.getIngredients().forEach(di ->
+                System.out.println(
+                        di.getIngredient().getName() +
+                                " | stock restant = " +
+                                di.getIngredient().getStockQuantity()
+                )
+        );
+        System.out.println("\nTEST 8.c – findOrderByReference");
+        Order foundOrder = dataRetriever.findOrderByReference(savedOrder.getReference());
+        System.out.println(
+                "Commande trouvée : " + foundOrder.getReference() +
+                        " | nombre de plats = " + foundOrder.getDishOrders().size()
+        );
+        System.out.println("\nTEST 8.d – stock insuffisant");
+
+        try {
+            DishOrder tooMuch = new DishOrder(null, dishForOrder, 999);
+            Order badOrder = new Order();
+            badOrder.setDishOrders(List.of(tooMuch));
+
+            dataRetriever.saveOrder(badOrder);
+            System.out.println("ERREUR : exception attendue");
+        } catch (RuntimeException e) {
+            System.out.println("Exception levée correctement : " + e.getMessage());
+        }
     }
 
 }
