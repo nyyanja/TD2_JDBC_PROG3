@@ -466,7 +466,6 @@ public class DataRetriever {
                 Dish d = findDishById(rsDO.getInt("dish_id"));
                 list.add(new DishOrder(null, d, rsDO.getInt("quantity")));
             }
-
             order.setDishOrders(list);
             return order;
 
@@ -474,5 +473,4 @@ public class DataRetriever {
             throw new RuntimeException("Erreur findOrderByReference : " + e.getMessage());
         }
     }
-
 }
