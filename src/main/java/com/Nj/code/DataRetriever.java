@@ -361,4 +361,118 @@ public class DataRetriever {
             throw new RuntimeException("Erreur saveIngredient : " + e.getMessage());
         }
     }
+    // =========================
+    // SAVE ORDER
+    // =========================
+    public Order saveOrder(Order orderToSave) {
+        try (Connection conn = db.getDBConnection()) {
+            conn.setAutoCommit(false);
+
+            PreparedStatement refPs = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM \"order\""
+            );
+            ResultSet refRs = refPs.executeQuery();
+            refRs.next();
+            int next = refRs.getInt(1) + 1;
+            String reference = String.format("ORD%05d", next);
+
+            PreparedStatement psOrder = conn.prepareStatement("""
+            INSERT INTO "order"(reference, creation_datetime)
+            VALUES (?, ?)
+            RETURNING id
+        """);
+            psOrder.setString(1, reference);
+            psOrder.setTimestamp(2, Timestamp.from(Instant.now()));
+            ResultSet rs = psOrder.executeQuery();
+            rs.next();
+
+            orderToSave.setId(rs.getInt(1));
+            orderToSave.setReference(reference);
+
+            for (DishOrder dOrder : orderToSave.getDishOrders()) {
+                Dish dish = findDishById(dOrder.getDish().getId());
+
+                for (DishIngredient di : dish.getIngredients()) {
+                    Ingredient ing = di.getIngredient();
+                    double needed = di.getQuantity() * dOrder.getQuantity();
+
+                    if (ing.getStockQuantity() < needed) {
+                        throw new RuntimeException("Stock insuffisant pour " + ing.getName());
+                    }
+
+                    ing.consumeStock(needed);
+
+                    PreparedStatement upd = conn.prepareStatement("""
+                    UPDATE ingredient SET stock_quantity = ?
+                    WHERE id = ?
+                """);
+                    upd.setDouble(1, ing.getStockQuantity());
+                    upd.setInt(2, ing.getId());
+                    upd.executeUpdate();
+                }
+
+                PreparedStatement psDO = conn.prepareStatement("""
+                INSERT INTO dish_order(order_id, dish_id, quantity)
+                VALUES (?, ?, ?)
+            """);
+                psDO.setInt(1, orderToSave.getId());
+                psDO.setInt(2, dish.getId());
+                psDO.setInt(3, dOrder.getQuantity());
+                psDO.executeUpdate();
+            }
+
+            conn.commit();
+            return orderToSave;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur saveOrder : " + e.getMessage());
+        }
+    }
+
+    // =========================
+    // FIND ORDER BY REFERENCE
+    // =========================
+    public Order findOrderByReference(String reference) {
+        try (Connection conn = db.getDBConnection()) {
+
+            PreparedStatement ps = conn.prepareStatement("""
+            SELECT id, reference, creation_datetime
+            FROM "order"
+            WHERE reference = ?
+        """);
+            ps.setString(1, reference);
+
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                throw new RuntimeException("Commande introuvable");
+            }
+
+            Order order = new Order();
+            order.setId(rs.getInt("id"));
+            order.setReference(rs.getString("reference"));
+            order.setCreationDatetime(rs.getTimestamp("creation_datetime").toInstant());
+
+            PreparedStatement psDO = conn.prepareStatement("""
+            SELECT dish_id, quantity
+            FROM dish_order
+            WHERE order_id = ?
+        """);
+            psDO.setInt(1, order.getId());
+
+            ResultSet rsDO = psDO.executeQuery();
+            List<DishOrder> list = new ArrayList<>();
+
+            while (rsDO.next()) {
+                Dish d = findDishById(rsDO.getInt("dish_id"));
+                list.add(new DishOrder(null, d, rsDO.getInt("quantity")));
+            }
+
+            order.setDishOrders(list);
+            return order;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur findOrderByReference : " + e.getMessage());
+        }
+    }
+
 }
