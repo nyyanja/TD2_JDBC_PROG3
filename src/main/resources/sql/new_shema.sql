@@ -35,3 +35,17 @@ ALTER TABLE ingredient
     ADD COLUMN stock_quantity DOUBLE PRECISION NOT NULL,
 ADD COLUMN stock_unit VARCHAR(20) NOT NULL;
 
+CREATE TABLE "order" (
+                         id SERIAL PRIMARY KEY,
+                         reference VARCHAR UNIQUE NOT NULL,
+                         creation_datetime TIMESTAMP NOT NULL
+);
+
+CREATE TABLE dish_order (
+                            id SERIAL PRIMARY KEY,
+                            order_id INTEGER NOT NULL REFERENCES "order"(id),
+                            dish_id INTEGER NOT NULL REFERENCES dish(id),
+                            quantity INTEGER NOT NULL
+);
+
+
