@@ -362,8 +362,8 @@ public class DataRetriever {
         }
     }
     // =========================
-    // SAVE ORDER
-    // =========================
+// SAVE ORDER ( conversion unités)
+// =========================
     public Order saveOrder(Order orderToSave) {
         try (Connection conn = db.getDBConnection()) {
             conn.setAutoCommit(false);
@@ -389,21 +389,50 @@ public class DataRetriever {
             orderToSave.setId(rs.getInt(1));
             orderToSave.setReference(reference);
 
+            // =========================
+            // VÉRIFICATION DU STOCK
+            // =========================
             for (DishOrder dOrder : orderToSave.getDishOrders()) {
+
                 Dish dish = findDishById(dOrder.getDish().getId());
 
                 for (DishIngredient di : dish.getIngredients()) {
+
                     Ingredient ing = di.getIngredient();
-                    double needed = di.getQuantity() * dOrder.getQuantity();
 
-                    if (ing.getStockQuantity() < needed) {
-                        throw new RuntimeException("Stock insuffisant pour " + ing.getName());
+                    double totalQuantity = di.getQuantity() * dOrder.getQuantity();
+
+                    double neededInKg = UnitConverter.toKg(
+                            ing.getName(),
+                            totalQuantity,
+                            di.getUnit()
+                    );
+
+                    if (ing.getStockQuantity() < neededInKg) {
+                        throw new RuntimeException(
+                                "Stock insuffisant pour " + ing.getName()
+                        );
                     }
+                }
+            }
 
-                    ing.consumeStock(needed);
-
+            // =========================
+            // DÉCRÉMENTATION DU STOCK
+            // =========================
+            for (DishOrder dOrder : orderToSave.getDishOrders()) {
+                Dish dish = findDishById(dOrder.getDish().getId());
+                for (DishIngredient di : dish.getIngredients()) {
+                    Ingredient ing = di.getIngredient();
+                    double totalQuantity = di.getQuantity() * dOrder.getQuantity();
+                    double neededInKg = UnitConverter.toKg(
+                            ing.getName(),
+                            totalQuantity,
+                            di.getUnit()
+                    );
+                    ing.consumeStock(neededInKg);
                     PreparedStatement upd = conn.prepareStatement("""
-                    UPDATE ingredient SET stock_quantity = ?
+                    UPDATE ingredient
+                    SET stock_quantity = ?
                     WHERE id = ?
                 """);
                     upd.setDouble(1, ing.getStockQuantity());
@@ -428,6 +457,7 @@ public class DataRetriever {
             throw new RuntimeException("Erreur saveOrder : " + e.getMessage());
         }
     }
+
 
     // =========================
     // FIND ORDER BY REFERENCE
